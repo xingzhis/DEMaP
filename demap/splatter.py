@@ -3,6 +3,44 @@ import scprep
 
 from scprep.run.r_function import RFunction
 from .embed import PCA
+import numpy as np
+import rpy2.robjects as ro
+from rpy2.robjects.packages import importr
+from rpy2.robjects.conversion import localconverter
+from rpy2.robjects import pandas2ri
+
+def dgCMatrix_to_numpy(dgCMatrix_obj):
+    """
+    Convert an R dgCMatrix object to a NumPy array.
+
+    Parameters:
+    dgCMatrix_name (str): The name of the dgCMatrix object in R's global environment.
+
+    Returns:
+    numpy.ndarray: The converted NumPy array.
+    """
+
+    # Ensure that pandas2ri and Matrix are activated and imported
+    pandas2ri.activate()
+    Matrix = importr('Matrix')
+
+    # Access the dgCMatrix object from R's global environment
+    # dgCMatrix_obj = ro.globalenv[dgCMatrix_name]
+
+    # Convert dgCMatrix to a dense matrix in R
+    dense_matrix = ro.r['as.matrix'](dgCMatrix_obj)
+
+    # Convert the dense R matrix to a NumPy array
+    with localconverter(ro.default_converter + pandas2ri.converter):
+        numpy_array = np.array(dense_matrix, dtype=np.int64)  # Specify dtype as float64
+
+    return numpy_array
+
+# Example usage:
+# Assuming the dgCMatrix object named 'dgCMatrix_obj' already exists in R's global environment
+# numpy_array = dgCMatrix_to_numpy('dgCMatrix_obj')
+# print(numpy_array)
+
 
 
 def _sum_to_one(x):
@@ -184,6 +222,7 @@ def SplatSimulate(
         seed=seed,
     )
     if dropout_prob is not None:
+        data["data"] = dgCMatrix_to_numpy(data["data"])
         data["data"] = np.random.binomial(
             n=data["data"], p=1 - dropout_prob, size=data["data"].shape
         )
@@ -194,7 +233,6 @@ def _load_splat(
     dropout=0.5,
     bcv=0.18,
     method="paths",
-    n_genes=17580,
     seed=None,
     return_groups=False,
     n_pca=100,
@@ -205,8 +243,6 @@ def _load_splat(
     data = SplatSimulate(
         method=method,
         seed=seed,
-        batchCells=10000,  # 16825,
-        nGenes=17580,
         mean_shape=6.6,
         mean_rate=0.45,
         lib_loc=8.4 + np.log(2),
@@ -223,6 +259,7 @@ def _load_splat(
     )
     branch = data["branch"]
     data = data["data"]
+    n_genes = kwargs['nGenes']
     if n_genes < data.shape[1]:
         data = data[:, np.random.choice(data.shape[1], n_genes, replace=False)]
     data = scprep.normalize.library_size_normalize(data)
@@ -237,7 +274,6 @@ def _load_splat(
 def paths(
     dropout=0.5,
     bcv=0.18,
-    n_genes=17580,
     seed=None,
     # hyperparameters
     group_prob_rate=10,
@@ -259,7 +295,6 @@ def paths(
     return _load_splat(
         dropout=dropout,
         bcv=bcv,
-        n_genes=n_genes,
         method="paths",
         group_prob=group_prob,
         path_skew=path_skew,
