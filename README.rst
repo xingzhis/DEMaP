@@ -22,11 +22,11 @@ Install
 
 Install DEMaP with ``pip``::
 
-    pip install git+https://github.com/scottgigante/DEMaP
+    pip install git+https://github.com/xingzhis/DEMaP
 
 To install with all optional dependencies::
 
-    git clone https://github.com/scottgigante/DEMaP
+    git clone https://github.com/xingzhis/DEMaP
     cd DEMaP
     pip install .[scripts]
 
