@@ -308,7 +308,6 @@ def paths(
 def groups(
     dropout=0.5,
     bcv=0.18,
-    n_genes=17580,
     seed=None,
     # hyperparameters
     group_prob_rate=10,
@@ -324,7 +323,6 @@ def groups(
     return _load_splat(
         dropout=dropout,
         bcv=bcv,
-        n_genes=n_genes,
         method="groups",
         group_prob=group_prob,
         seed=seed,
