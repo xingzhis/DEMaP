@@ -223,9 +223,15 @@ def SplatSimulate(
     )
     if dropout_prob is not None:
         data["data"] = dgCMatrix_to_numpy(data["data"])
-        data["data"] = np.random.binomial(
-            n=data["data"], p=1 - dropout_prob, size=data["data"].shape
-        )
+        # data["data"] = np.random.binomial(
+        #     n=data["data"], p=1 - dropout_prob, size=data["data"].shape
+        # )
+        mask = np.random.binomial(
+            n=1, p=1 - dropout_prob, size=data["data"].shape
+        ).astype(bool)
+        data["data"] = data["data"][mask]
+        data["branch"] = data["branch"][mask]
+
     return data
 
 
@@ -301,6 +307,7 @@ def paths(
         path_from=path_from,
         path_nonlinearProb=path_nonlinearProb,
         seed=seed,
+        return_groups=True,
         **kwargs,
     )
 
@@ -326,5 +333,6 @@ def groups(
         method="groups",
         group_prob=group_prob,
         seed=seed,
+        return_groups=True,
         **kwargs,
     )
